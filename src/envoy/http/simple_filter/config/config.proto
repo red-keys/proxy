@@ -1,0 +1,8 @@
+syntax = "proto3";  
+  
+package simple_filter;  
+  
+// Simple filter configuration  
+message SimpleFilterConfig {  
+  // 即使没有配置项,也需要定义一个空的消息  
+}

@@ -1,0 +1,64 @@
+# Copyright 2019 Istio Authors. All Rights Reserved.  
+#  
+# Licensed under the Apache License, Version 2.0 (the "License");  
+# you may not use this file except in compliance with the License.  
+# You may obtain a copy of the License at  
+#  
+#    http://www.apache.org/licenses/LICENSE-2.0  
+#  
+# Unless required by applicable law or agreed to in writing, software  
+# distributed under the License is distributed on an "AS IS" BASIS,  
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  
+# See the License for the specific language governing permissions and  
+# limitations under the License.  
+#  
+################################################################################  
+#  
+  
+load(  
+    "@envoy//bazel:envoy_build_system.bzl",  
+    "envoy_cc_library",  
+    "envoy_package",  
+)  
+  
+envoy_package()  
+  
+# 定义 proto 库  
+proto_library(  
+    name = "config_proto",  
+    srcs = ["config/config.proto"],  
+)  
+  
+# 生成 C++ proto 库  
+cc_proto_library(  
+    name = "config_cc_proto",  
+    deps = [":config_proto"],  
+)  
+  
+envoy_cc_library(  
+    name = "simple_filter",  
+    srcs = ["simple_filter.cc"],  
+    hdrs = ["simple_filter.h"],  
+    repository = "@envoy",  
+    deps = [  
+        ":config_cc_proto",  
+        "@envoy//envoy/http:filter_interface",  
+        "@envoy//source/common/http:utility_lib",
+        "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
+    ],  
+)  
+  
+envoy_cc_library(  
+    name = "config_lib",  
+    srcs = ["config.cc"],  
+    hdrs = ["config.h"],  
+    repository = "@envoy",  
+    visibility = ["//visibility:public"],  
+    deps = [  
+        ":simple_filter",  
+        ":config_cc_proto",  
+        "@envoy//envoy/registry",  
+        "@envoy//envoy/server:filter_config_interface",  
+        "@envoy//source/extensions/filters/http/common:factory_base_lib",  
+    ],  
+)
