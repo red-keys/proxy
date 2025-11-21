@@ -1,24 +1,49 @@
-#pragma once      
-      
-#include "envoy/http/filter.h"      
-#include "source/extensions/filters/http/common/pass_through_filter.h"    
-#include "source/common/http/utility.h"    
-#include "absl/strings/string_view.h"    
-#include <fstream>  
-#include <iterator>  
+#pragma once              
+        
+#include "envoy/http/filter.h"        
+#include "source/extensions/filters/http/common/pass_through_filter.h"      
+#include "source/common/http/utility.h"      
+#include "absl/strings/string_view.h"      
+#include "src/envoy/http/simple_filter/config/config.pb.h"  // 修改这一行  
+#include <fstream>    
+#include <iterator>
   
 namespace Envoy {      
 namespace Http {      
 namespace SimpleFilter {      
+  
+// 过滤器配置类  
+class FilterConfig {  
+public:  
+  FilterConfig(const simple_filter::SimpleFilterConfig& proto_config)  
+      : xml_tag_start_(proto_config.xml_tag_start()),  
+        xml_tag_end_(proto_config.xml_tag_end()),  
+        success_match_value_(proto_config.success_match_value()),  
+        success_route_marker_(proto_config.success_route_marker()),  
+        error_route_marker_(proto_config.error_route_marker()) {}  
+  
+  const std::string& xmlTagStart() const { return xml_tag_start_; }  
+  const std::string& xmlTagEnd() const { return xml_tag_end_; }  
+  const std::string& successMatchValue() const { return success_match_value_; }  
+  const std::string& successRouteMarker() const { return success_route_marker_; }  
+  const std::string& errorRouteMarker() const { return error_route_marker_; }  
+  
+private:  
+  const std::string xml_tag_start_;  
+  const std::string xml_tag_end_;  
+  const std::string success_match_value_;  
+  const std::string success_route_marker_;  
+  const std::string error_route_marker_;  
+};  
+  
+using FilterConfigSharedPtr = std::shared_ptr<FilterConfig>;  
       
 class SimpleFilter : public PassThroughFilter {    
 public:    
-  SimpleFilter() = default;    
+  SimpleFilter(FilterConfigSharedPtr config) : config_(config) {}  
       
   FilterHeadersStatus decodeHeaders(RequestHeaderMap& headers, bool end_stream) override {    
     session_id_ = Http::Utility::parseCookieValue(headers, "sessionid");    
-      
-    // 保存 headers 引用以便后续使用  
     request_headers_ = &headers;  
         
     if (!end_stream) {    
@@ -33,29 +58,28 @@ public:
       return FilterDataStatus::StopIterationAndBuffer;    
     }    
         
-    // 解析请求体    
     const auto* buffer = decoder_callbacks_->decodingBuffer();    
     if (buffer) {    
       std::string body = buffer->toString();    
           
-      size_t start_pos = body.find("<SERVICE_CODE attr=\"s,30\">");    
-      size_t end_pos = body.find("</SERVICE_CODE>");    
+      // 使用配置中的标签名称  
+      size_t start_pos = body.find(config_->xmlTagStart());    
+      size_t end_pos = body.find(config_->xmlTagEnd());    
           
       if (start_pos != std::string::npos && end_pos != std::string::npos) {    
-        start_pos += 26;    
+        start_pos += config_->xmlTagStart().length();  
         b_value_ = body.substr(start_pos, end_pos - start_pos);    
             
-        // 根据解析结果设置路由选择头  
         if (request_headers_) {  
-          if (b_value_ == "01001000001") {    
+          // 使用配置中的匹配值和路由标记  
+          if (b_value_ == config_->successMatchValue()) {    
             request_headers_->addCopy(    
-              LowerCaseString("x-mock-response"), "success");    
+              LowerCaseString("x-mock-response"), config_->successRouteMarker());    
           } else {    
             request_headers_->addCopy(    
-              LowerCaseString("x-mock-response"), "error");    
+              LowerCaseString("x-mock-response"), config_->errorRouteMarker());    
           }    
               
-          // 清除路由缓存,强制重新匹配路由    
           decoder_callbacks_->clearRouteCache();    
         }  
       }    
@@ -65,9 +89,10 @@ public:
   }  
   
 private:    
+  FilterConfigSharedPtr config_;  
   std::string session_id_;    
   std::string b_value_;  
-  RequestHeaderMap* request_headers_{nullptr};  // 保存请求头引用  
+  RequestHeaderMap* request_headers_{nullptr};  
 };   
 } // namespace SimpleFilter      
 } // namespace Http      

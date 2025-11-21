@@ -1,8 +1,20 @@
-syntax = "proto3";  
-  
-package simple_filter;  
-  
-// Simple filter configuration  
-message SimpleFilterConfig {  
-  // 即使没有配置项,也需要定义一个空的消息  
+syntax = "proto3";    
+    
+package simple_filter;    
+    
+message SimpleFilterConfig {    
+  // XML 标签的开始标记  
+  string xml_tag_start = 1;  
+    
+  // XML 标签的结束标记  
+  string xml_tag_end = 2;  
+    
+  // 成功匹配的值  
+  string success_match_value = 3;  
+    
+  // 成功响应的路由标记  
+  string success_route_marker = 4;  
+    
+  // 失败响应的路由标记  
+  string error_route_marker = 5;  
 }
