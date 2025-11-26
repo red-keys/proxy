@@ -2,6 +2,7 @@
 #   bazel build --config=libc++ --config=release //src/envoy:envoy
 #   ./envoy -c test.yaml
 #    curl -v -X POST -H "Cookie: sessionid=123" --data-binary '<SERVICE_CODE attr="s,30">01001000001</SERVICE_CODE>' http://127.0.0.1:10000
+#    curl -v -X POST -H "Cookie: sessionid=123" --data-binary '<SERVICE_CODE attr="s,30">01001000001</SERVICE_CODE><abcd>123</abcd>' http://127.0.0.1:10000 --output -
 node:  
   id: test-node  
   cluster: test-cluster  
@@ -38,8 +39,6 @@ static_resources:
                     exact_match: "success"  
                 direct_response:  
                   status: 200  
-                  body:  
-                    filename: ./http_response.txt  
               - match:  
                   prefix: "/"  
                   headers:  
@@ -59,11 +58,12 @@ static_resources:
           - name: envoy.filters.http.simple_filter  
             typed_config:  
               "@type": type.googleapis.com/simple_filter.SimpleFilterConfig  
-              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">"  
-              xml_tag_end: "</SERVICE_CODE>"  
-              success_match_value: "01001000001"  
+              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">01001000001</SERVICE_CODE>"  
+              xml_tag_end: "<abcd>123</abcd>"  
+              success_match_value: ""  
               success_route_marker: "success"  
               error_route_marker: "error"  
+              response_header: "workKey:0AkMNPL1CXSh8oiSQsOGHPtYfHNfw8JnFoT4f/4RFDQ=;result:S;workDay:20991231;"
           - name: envoy.filters.http.router  
             typed_config:  
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router  
