@@ -75,14 +75,18 @@ public:
           if (config_->successMatchValue().empty() || b_value_ == config_->successMatchValue()) {  
             request_headers_->addCopy(  
                 LowerCaseString("x-mock-response"), config_->successRouteMarker());  
-          } else {  
-            request_headers_->addCopy(  
-                LowerCaseString("x-mock-response"), config_->errorRouteMarker());  
+            decoder_callbacks_->clearRouteCache(); 
+            return FilterDataStatus::Continue; 
           }  
-          decoder_callbacks_->clearRouteCache();  
         }  
       }  
     }  
+    // 所有其他情况都视为错误  
+    if (request_headers_) {
+      request_headers_->addCopy(  
+      LowerCaseString("x-mock-response"), config_->errorRouteMarker());  
+    }
+    decoder_callbacks_->clearRouteCache();
     return FilterDataStatus::Continue;  
   }  
   
