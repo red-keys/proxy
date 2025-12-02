@@ -3,6 +3,14 @@
 #   ./envoy -c test.yaml
 #    curl -v -X POST -H "Cookie: sessionid=123" --data-binary '<SERVICE_CODE attr="s,30">01001000001</SERVICE_CODE>' http://127.0.0.1:10000
 #    curl -v -X POST -H "Cookie: sessionid=123" --data-binary '<SERVICE_CODE attr="s,30">01001000001</SERVICE_CODE><abcd>123</abcd>' http://127.0.0.1:10000 --output -
+#  python3 make_body_bin.py
+#  mv body.bin body29.bin
+#  vi http_http_response48.txt
+#  python3 text2bin.py http_http_response48.txt http_response48.bin
+#  vi http_http_response48.txt
+#  python3 text2bin.py http_http_response29.txt http_response29.bin 
+#   curl -v -X POST --data-binary @body29.bin http://127.0.0.1:10000  --output - | xxd
+
 node:  
   id: test-node  
   cluster: test-cluster  
@@ -17,7 +25,7 @@ static_resources:
   - name: listener_0  
     address:  
       socket_address:  
-        address: 127.0.0.1  
+        address: 0.0.0.0  
         port_value: 10000  
     filter_chains:  
     - filters:  
@@ -36,33 +44,42 @@ static_resources:
                   prefix: "/"  
                   headers:  
                   - name: "x-mock-response"  
-                    exact_match: "success"  
+                    exact_match: "success48"  
                 direct_response:  
-                  status: 200  
+                  status: 200                    
+                  body:  
+                    filename: ./http_response48.bin
               - match:  
                   prefix: "/"  
                   headers:  
                   - name: "x-mock-response"  
-                    exact_match: "error"  
-                direct_response:  
-                  status: 400  
-                  body:  
-                    inline_string: "sorry, it is a error"  
-              - match:  
-                  prefix: "/"  
+                    exact_match: "success29"  
                 direct_response:  
                   status: 200  
                   body:  
-                    inline_string: "default response" 
+                    filename: ./http_response29.bin
+              - match:  
+                  prefix: "/"  
+                direct_response:  
+                  status: 400  
+                  body:  
+                    filename: ./error_response.bin
           http_filters:  
           - name: envoy.filters.http.simple_filter  
             typed_config:  
               "@type": type.googleapis.com/simple_filter.SimpleFilterConfig  
-              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">01001000001</SERVICE_CODE>"  
-              xml_tag_end: "<abcd>123</abcd>"  
+              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">11003000001</SERVICE_CODE>"  
+              xml_tag_end: "<SERVICE_SCENE attr=\"s,2\">48</SERVICE_SCENE>"  
               success_match_value: ""  
-              success_route_marker: "success"  
-              error_route_marker: "error"  
+              success_route_marker: "success48"    
+              response_header: "workKey:0AkMNPL1CXSh8oiSQsOGHPtYfHNfw8JnFoT4f/4RFDQ=;result:S;workDay:20991231;" 
+          - name: envoy.filters.http.simple_filter1  
+            typed_config:  
+              "@type": type.googleapis.com/simple_filter.SimpleFilterConfig  
+              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">01001000001</SERVICE_CODE>"  
+              xml_tag_end: "<SERVICE_SCENE attr=\"s,2\">29</SERVICE_SCENE>"  
+              success_match_value: ""  
+              success_route_marker: "success29"
               response_header: "workKey:0AkMNPL1CXSh8oiSQsOGHPtYfHNfw8JnFoT4f/4RFDQ=;result:S;workDay:20991231;"
           - name: envoy.filters.http.router  
             typed_config:  

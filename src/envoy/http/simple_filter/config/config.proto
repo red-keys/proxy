@@ -20,4 +20,7 @@ message SimpleFilterConfig {
 
   // 需要发送的响应报文的HTTP头
   string response_header = 6;  
+
+  // 设置响应报文内容的文件
+  string response_content_file = 7;
 }

@@ -45,6 +45,7 @@ envoy_cc_library(
         "@envoy//envoy/http:filter_interface",  
         "@envoy//source/common/http:utility_lib",
         "@envoy//source/extensions/filters/http/common:pass_through_filter_lib",
+        "@envoy//source/common/common:base64_lib",
     ],  
 )  
   
