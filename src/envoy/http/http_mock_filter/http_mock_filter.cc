@@ -1,11 +1,10 @@
-#include "src/envoy/http/simple_filter/simple_filter.h"  
+#include "src/envoy/http/http_mock_filter/http_mock_filter.h"  
   
 namespace Envoy {  
 namespace Http {  
-namespace SimpleFilter {  
+namespace HttpMockFilter {  
   
-  FilterHeadersStatus SimpleFilter::decodeHeaders(RequestHeaderMap& headers, bool end_stream)  {  
-    session_id_ = Http::Utility::parseCookieValue(headers, "sessionid");  
+  FilterHeadersStatus HttpMockFilter::decodeHeaders(RequestHeaderMap& headers, bool end_stream)  {   
     request_headers_ = &headers;  
     if (!end_stream) {  
       return FilterHeadersStatus::StopIteration;  
@@ -13,7 +12,7 @@ namespace SimpleFilter {
     return FilterHeadersStatus::Continue;  
   }  
 
-  FilterDataStatus SimpleFilter::decodeData(Buffer::Instance&, bool end_stream) {  
+  FilterDataStatus HttpMockFilter::decodeData(Buffer::Instance&, bool end_stream) {  
     if (!end_stream) {  
         return FilterDataStatus::StopIterationAndBuffer;  
     }  
@@ -22,22 +21,19 @@ namespace SimpleFilter {
     if (buffer && buffer->length() >= 4) {   
       std::string xml_data;  
       xml_data.resize(buffer->length());  
+      // 读取HTTP请求体内容到 xml_data 字符串中
       buffer->copyOut(0, buffer->length(), &xml_data[0]);  
-          
-      // 处理 XML 数据  
-      size_t start_pos = xml_data.find(config_->xmlTagStart());  
-      size_t end_pos = xml_data.find(config_->xmlTagEnd());  
-      if (start_pos != std::string::npos && end_pos != std::string::npos) {  
-          start_pos += config_->xmlTagStart().length();  
-          b_value_ = xml_data.substr(start_pos, end_pos - start_pos);  
-          if (request_headers_) {  
-              if (config_->successMatchValue().empty() || b_value_ == config_->successMatchValue()) {  
-                  request_headers_->addCopy(  
-                      LowerCaseString("x-mock-response"), config_->successRouteMarker());  
-                  decoder_callbacks_->clearRouteCache();  
-                  return FilterDataStatus::Continue;  
-              }  
-          }  
+      
+      size_t first_pos = xml_data.find(config_->firstCandidateStr());  
+      size_t second_pos = xml_data.find(config_->secondCandidateStr());  
+      if (first_pos != std::string::npos && second_pos != std::string::npos) {  
+        if (request_headers_) {  
+          //做一个标记，表示走成功路由 路由规则匹配到成功标记的后续动作在配置文件定义
+          request_headers_->addCopy(  
+              LowerCaseString("x-mock-response"), config_->successRouteMarker());  
+          decoder_callbacks_->clearRouteCache();  
+          return FilterDataStatus::Continue;    
+        }  
       }       
     }  
     
@@ -45,7 +41,7 @@ namespace SimpleFilter {
     return FilterDataStatus::Continue;  
   }
  
-  Http::FilterHeadersStatus SimpleFilter::encodeHeaders(ResponseHeaderMap& headers, bool )  {  
+  Http::FilterHeadersStatus HttpMockFilter::encodeHeaders(ResponseHeaderMap& headers, bool )  {  
     // 解析 response_header_ 字符串，格式为 "userName:John;userId:123;"  
     std::string header_str = config_->responseHeader();  
       
@@ -67,6 +63,7 @@ namespace SimpleFilter {
           key_string.setCopy(key);
           HeaderString value_string;
           value_string.setCopy(value);
+          // 添加参数到响应HTTP头中
           headers.addViaMove(std::move(key_string), std::move(value_string));
         }  
       }  
@@ -74,6 +71,6 @@ namespace SimpleFilter {
  
     return Http::FilterHeadersStatus::Continue;  
   } 
-} // namespace SimpleFilter  
+} // namespace HttpMockFilter  
 } // namespace Http  
 } // namespace Envoy

@@ -4,9 +4,9 @@
   
 namespace Envoy {  
 namespace Http {  
-namespace SimpleFilter {  
+namespace HttpMockFilter {  
   
-class SimpleFilterFactory   
+class HttpMockFilterFactory   
     : public Server::Configuration::NamedHttpFilterConfigFactory {  
 public:  
   Http::FilterFactoryCb createFilterFactoryFromProto(  
@@ -17,6 +17,6 @@ public:
   std::string name() const override;  
 };  
   
-} // namespace SimpleFilter  
+} // namespace HttpMockFilter  
 } // namespace Http  
 } // namespace Envoy

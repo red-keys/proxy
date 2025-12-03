@@ -65,20 +65,18 @@ static_resources:
                   body:  
                     filename: ./error_response.bin
           http_filters:  
-          - name: envoy.filters.http.simple_filter  
+          - name: envoy.filters.http.http_mock_filter  
             typed_config:  
-              "@type": type.googleapis.com/simple_filter.SimpleFilterConfig  
-              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">11003000001</SERVICE_CODE>"  
-              xml_tag_end: "<SERVICE_SCENE attr=\"s,2\">48</SERVICE_SCENE>"  
-              success_match_value: ""  
+              "@type": type.googleapis.com/http_mock_filter.HttpMockFilterConfig  
+              first_candidate_str: "<SERVICE_CODE attr=\"s,30\">11003000001</SERVICE_CODE>"  
+              second_candidate_str: "<SERVICE_SCENE attr=\"s,2\">48</SERVICE_SCENE>"    
               success_route_marker: "success48"    
               response_header: "workKey:0AkMNPL1CXSh8oiSQsOGHPtYfHNfw8JnFoT4f/4RFDQ=;result:S;workDay:20991231;" 
-          - name: envoy.filters.http.simple_filter1  
+          - name: envoy.filters.http.http_mock_filter1  
             typed_config:  
-              "@type": type.googleapis.com/simple_filter.SimpleFilterConfig  
-              xml_tag_start: "<SERVICE_CODE attr=\"s,30\">01001000001</SERVICE_CODE>"  
-              xml_tag_end: "<SERVICE_SCENE attr=\"s,2\">29</SERVICE_SCENE>"  
-              success_match_value: ""  
+              "@type": type.googleapis.com/http_mock_filter.HttpMockFilterConfig  
+              first_candidate_str: "<SERVICE_CODE attr=\"s,30\">01001000001</SERVICE_CODE>"  
+              second_candidate_str: "<SERVICE_SCENE attr=\"s,2\">29</SERVICE_SCENE>"    
               success_route_marker: "success29"
               response_header: "workKey:0AkMNPL1CXSh8oiSQsOGHPtYfHNfw8JnFoT4f/4RFDQ=;result:S;workDay:20991231;"
           - name: envoy.filters.http.router  

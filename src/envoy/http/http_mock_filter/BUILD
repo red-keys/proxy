@@ -36,9 +36,9 @@ cc_proto_library(
 )  
   
 envoy_cc_library(  
-    name = "simple_filter",  
-    srcs = ["simple_filter.cc"],  
-    hdrs = ["simple_filter.h"],  
+    name = "http_mock_filter",  
+    srcs = ["http_mock_filter.cc"],  
+    hdrs = ["http_mock_filter.h"],  
     repository = "@envoy",  
     deps = [  
         ":config_cc_proto",  
@@ -56,7 +56,7 @@ envoy_cc_library(
     repository = "@envoy",  
     visibility = ["//visibility:public"],  
     deps = [  
-        ":simple_filter",  
+        ":http_mock_filter",  
         ":config_cc_proto",  
         "@envoy//envoy/registry",  
         "@envoy//envoy/server:filter_config_interface",  

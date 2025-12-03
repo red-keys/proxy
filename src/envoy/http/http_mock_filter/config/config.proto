@@ -1,0 +1,23 @@
+syntax = "proto3";    
+    
+package http_mock_filter;    
+    
+message HttpMockFilterConfig {    
+  // 第一个待匹配的字符串
+  string first_candidate_str = 1;  
+    
+  // 第二个待匹配的字符串 
+  string second_candidate_str = 2;
+    
+  // 成功响应的路由标记  
+  string success_route_marker = 3;  
+    
+  // 失败响应的路由标记  
+  string error_route_marker = 4;
+
+  // 需要发送的响应报文的HTTP头
+  string response_header = 5;  
+
+  // 设置响应报文内容的文件
+  string response_content_file = 6;
+}
